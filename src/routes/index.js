@@ -64,6 +64,7 @@ router.get('/videogames', async (req, res) => {
     }
 });
 
+// GET /generes
 router.get('/genres', async (req, res) => {
     const apiUrlGenres = await axios.get(`https://api.rawg.io/api/genres?key=${API_KEY}`)
     const genres = apiUrlGenres.data.results.map(el => el.name)
@@ -78,6 +79,7 @@ router.get('/genres', async (req, res) => {
     res.status(200).send(allGenres);
 });
 
+//POST /videogames
 router.post('/videogames', async (req, res) => {
     const {name, description, release, rating, platforms, image, genre, createdInDb } = req.body;
     
@@ -102,5 +104,20 @@ router.post('/videogames', async (req, res) => {
     res.status(200).send('Video Game Created Successfully')
 
 });
+
+// GET /videogames/{id}
+router.get('/videogames/:id', async (req, res) => {
+    const id = req.params.id;                                // es lo mismo que const {id} = req.params
+    const videogamesTotal = await getAllVideogames();
+
+    if(id){
+        let videogamesId = await videogamesTotal.filter( el => el.id == id)
+        videogamesId.length?
+        res.status(200).json(videogamesId):
+        res.status(404).send('Video Game Not Found')
+    }
+})
+
+
 
 module.exports = router;
