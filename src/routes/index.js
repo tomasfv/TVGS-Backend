@@ -15,7 +15,6 @@ const router = Router();
 
 
 const getApiInfo = async () => {
-    // PAGE = 1;
     const apiUrl = await axios.get(`https://api.rawg.io/api/games?key=${API_KEY}`)
     const apiUrl2 = await axios.get(`https://api.rawg.io/api/games?key=${API_KEY}&page=2`)
     const apiUrl3 = await axios.get(`https://api.rawg.io/api/games?key=${API_KEY}&page=3`)
@@ -29,9 +28,11 @@ const getApiInfo = async () => {
             name: el.name,
             release: el.released,
             image: el.background_image,
+            screenshots: el.short_screenshots.map( s => s.image),
             rating: el.rating,
             platforms: el.platforms.map( p => p.platform.name),
-            genres: el.genres.map(g => g.name), 
+            genres: el.genres.map(g => g.name),
+            stores: el.stores.map(s => s.store.name), 
             
         }
     });
@@ -152,11 +153,22 @@ router.post('/videogames', async (req, res) => {
 router.get('/videogames/:id', async (req, res) => {
     const id = req.params.id;                                // es lo mismo que const {id} = req.params
     const videogamesTotal = await getAllVideogames();
+    const detailsData = await axios.get(`https://api.rawg.io/api/games/${id}?key=${API_KEY}`);
+    const videogameData = detailsData.data;
+    const videogameDetail = {
+        
+            developers: videogameData.developers.map(d => d.name),
+            publishers: videogameData.publishers.map(p => p.name),
+            website: videogameData.website,   
+            description: videogameData.description_raw,
+        }
+
+    
 
     if(id){
         let videogamesId = await videogamesTotal.filter( el => el.id == id)
         videogamesId.length?
-        res.status(200).json(videogamesId):
+        res.status(200).json(videogamesId.concat(videogameDetail)):
         res.status(404).send('Video Game Not Found')
     }
 })
