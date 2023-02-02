@@ -25,14 +25,14 @@ const getApiInfo = async () => {
     const apiInfo = await totalApi.map( el => {
         return {
             id: el.id,
-            name: el.name,
-            release: el.released,
             image: el.background_image,
-            screenshots: el.short_screenshots.map( s => s.image),
-            rating: el.rating,
-            platforms: el.platforms.map( p => p.platform.name),
+            name: el.name,
             genres: el.genres.map(g => g.name),
-            stores: el.stores.map(s => s.store.name), 
+            rating: el.rating,
+            //release: el.released,
+            //screenshots: el.short_screenshots.map( s => s.image),
+            //platforms: el.platforms.map( p => p.platform.name),
+            //stores: el.stores.map(s => s.store.name), 
             
         }
     });
@@ -66,12 +66,14 @@ const getMoreVideogames = async () => {
     const moreApiInfo = await moreApiUrl.data.results.map( el => {
         return {
             id: el.id,
-            name: el.name,
-            release: el.released,
             image: el.background_image,
+            name: el.name,
+            genres: el.genres.map(g => g.name),
             rating: el.rating,
-            platforms: el.platforms.map( p => p.platform.name),
-            genres: el.genres.map(g => g.name), 
+            //release: el.released, 
+            //screenshots: el.short_screenshots.map( s => s.image),
+            //platforms: el.platforms.map( p => p.platform.name),
+            //stores: el.stores.map(s => s.store.name),
 
         }
     });
@@ -150,27 +152,60 @@ router.post('/videogames', async (req, res) => {
 });
 
 // GET /videogames/{id}
-router.get('/videogames/:id', async (req, res) => {
-    const id = req.params.id;                                // es lo mismo que const {id} = req.params
-    const videogamesTotal = await getAllVideogames();
-    const detailsData = await axios.get(`https://api.rawg.io/api/games/${id}?key=${API_KEY}`);
-    const videogameData = detailsData.data;
-    const videogameDetail = {
+// router.get('/videogames/:id', async (req, res) => {
+//     const id = req.params.id;                                // es lo mismo que const {id} = req.params
+//     const videogamesTotal = await getAllVideogames();
+//     const detailsData = await axios.get(`https://api.rawg.io/api/games/${id}?key=${API_KEY}`);
+//     const videogameData = detailsData.data;
+//     const videogameDetail = {
         
-            developers: videogameData.developers.map(d => d.name),
-            publishers: videogameData.publishers.map(p => p.name),
-            website: videogameData.website,   
-            description: videogameData.description_raw,
-        }
+//             developers: videogameData.developers.map(d => d.name),
+//             publishers: videogameData.publishers.map(p => p.name),
+//             website: videogameData.website,   
+//             description: videogameData.description_raw,
+//         }
 
     
 
+//     if(id){
+//         let videogamesId = await videogamesTotal.filter( el => el.id == id)
+//         videogamesId.length?
+//         res.status(200).json(videogamesId.concat(videogameDetail)):
+//         res.status(404).send('Video Game Not Found')
+//     }
+// })
+
+router.get('/videogames/:id', async (req, res) => {
+    const id = req.params.id;
+    const details = await axios.get(`https://api.rawg.io/api/games/${id}?key=${API_KEY}`);
+    const screenshots = await axios.get(`https://api.rawg.io/api/games/${id}/screenshots?key=${API_KEY}`);
+    const detailsData = details.data;
+    const screenshotsData = screenshots.data;
+    const videogameDetail = [{
+            name: detailsData.name,
+            id: detailsData.id,
+            released: detailsData.released,
+            rating: detailsData.rating,
+            image: detailsData.background_image,
+            screenshots: screenshotsData.results.map( s => s.image),
+            platforms: detailsData.parent_platforms.map( p => p.platform.name),
+            genres: detailsData.genres.map(g => g.name),
+            stores: detailsData.stores.map(s => s.store.name),
+            storesWeb: detailsData.stores.map(s => s.store.domain), 
+            developers: detailsData.developers.map(d => d.name),
+            publishers: detailsData.publishers.map(p => p.name),
+            website: detailsData.website,   
+            description: detailsData.description_raw,
+    }]
+
     if(id){
-        let videogamesId = await videogamesTotal.filter( el => el.id == id)
-        videogamesId.length?
-        res.status(200).json(videogamesId.concat(videogameDetail)):
+        videogameDetail.length?
+        res.status(200).json(videogameDetail):
         res.status(404).send('Video Game Not Found')
+
     }
+
+
 })
 
 
