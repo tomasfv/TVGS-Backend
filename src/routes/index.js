@@ -84,23 +84,49 @@ const getMoreVideogames = async () => {
 
 
 //ROUTES
-// GET /videogames + GET /videogames?name=...
+// GET /videogames
 
 router.get('/videogames', async (req, res) => {
-    const name = req.query.name;
+    
     let videogamesTotal = await getAllVideogames();
 
-    if(name){
-        let videogameName = await videogamesTotal.filter(el => el.name.toLowerCase().includes(name.toLowerCase()));
-        videogameName.length ?
-        res.status(200).send(videogameName) :
-        res.status(404).send('Video Game Not Found')
-    } else {
+    
         res.status(200).send(videogamesTotal)
-    }
+    
+    });
+//GET /search?name=...
 
-    // getMoreVideogames();   //CADA VEZ QUE LLAMO A LA RUTA, TRAIGO INFO DE LA PÁGINA SIGUIENTE.
-});
+router.get('/search', async(req, res) => {
+    const name = req.query.name;
+    const videogameByName= await axios.get(`https://api.rawg.io/api/games?key=${API_KEY}&search=${name}`);
+    // const videogameByName2= await axios.get(videogameByName.data.next? videogameByName.data.next : 'https://null');
+    // const videogameByName3= await axios.get(videogameByName2.data.next? videogameByName.data.next : 'https://null');
+    // const videogameByName4= await axios.get(videogameByName3.data.next? videogameByName.data.next : 'https://null');
+    // const videogameByName5= await axios.get(videogameByName4.data.next? videogameByName.data.next : 'https://null');
+    
+    const videogameInfo = videogameByName.data.results
+
+    const videogameDet = await videogameInfo.map(el => {
+       return {
+        id: el.id,
+        image: el.background_image,
+        name: el.name,
+        genres: el.genres.map(g => g.name),
+        rating: el.rating,
+       }
+    })
+
+    if(name){
+        videogameDet.length?
+        res.status(200).json(videogameDet):
+        res.status(404).send('Video Game Not Found')
+
+    }
+})
+
+
+//GET/ getMoreVideogames();   //CADA VEZ QUE LLAMO A LA RUTA, TRAIGO INFO DE LA PÁGINA SIGUIENTE.
+
 
 router.get('/morevideogames', async (req, res) => {
     
