@@ -16,10 +16,10 @@ const router = Router();
 
 const getApiInfo = async () => {
     const apiUrl = await axios.get(`https://api.rawg.io/api/games?key=${API_KEY}`)
-    const apiUrl2 = await axios.get(`https://api.rawg.io/api/games?key=${API_KEY}&page=2`)
-    const apiUrl3 = await axios.get(`https://api.rawg.io/api/games?key=${API_KEY}&page=3`)
-    const apiUrl4 = await axios.get(`https://api.rawg.io/api/games?key=${API_KEY}&page=4`)
-    const apiUrl5 = await axios.get(`https://api.rawg.io/api/games?key=${API_KEY}&page=5`)
+    const apiUrl2 = await axios.get(apiUrl.data.next)
+    const apiUrl3 = await axios.get(apiUrl2.data.next)
+    const apiUrl4 = await axios.get(apiUrl3.data.next)
+    const apiUrl5 = await axios.get(apiUrl4.data.next)
     const totalApi = apiUrl.data.results.concat(apiUrl2.data.results).concat(apiUrl3.data.results).concat(apiUrl4.data.results).concat(apiUrl5.data.results)
     
     const apiInfo = await totalApi.map( el => {
@@ -100,9 +100,6 @@ router.get('/search', async(req, res) => {
     const name = req.query.name;
     const videogameByName= await axios.get(`https://api.rawg.io/api/games?key=${API_KEY}&search=${name}`);
     // const videogameByName2= await axios.get(videogameByName.data.next? videogameByName.data.next : 'https://null');
-    // const videogameByName3= await axios.get(videogameByName2.data.next? videogameByName.data.next : 'https://null');
-    // const videogameByName4= await axios.get(videogameByName3.data.next? videogameByName.data.next : 'https://null');
-    // const videogameByName5= await axios.get(videogameByName4.data.next? videogameByName.data.next : 'https://null');
     
     const videogameInfo = videogameByName.data.results
 
@@ -151,6 +148,43 @@ router.get('/genres', async (req, res) => {
     res.status(200).send(allGenres);
 });
 
+//GET /genreFilter?genres=...
+
+router.get('/genrefilter', async (req, res) =>{
+    let name = req.query.name;
+    if(name === 'board games' || name === 'board%20games'){
+        name = 'board-games';
+    } 
+    if(name === 'massively multiplayer' || name === 'massively%20multiplayer'){
+        name = 'massively-multiplayer';
+    } 
+    if(name === 'rpg'){
+        name = 'role-playing-games-rpg';
+    } 
+    console.log(name)
+    const genreVideogames = await axios.get(`https://api.rawg.io/api/games?key=${API_KEY}&genres=${name}`)
+    const genreVideogames2 = await axios.get(genreVideogames.data.next)
+    const genreVideogames3 = await axios.get(genreVideogames2.data.next)
+    const videogamesInfo = genreVideogames.data.results.concat(genreVideogames2.data.results).concat(genreVideogames3.data.results)
+
+    const videogamesList = await videogamesInfo.map(el => {
+       return {
+        id: el.id,
+        image: el.background_image,
+        name: el.name,
+        genres: el.genres.map(g => g.name),
+        rating: el.rating,
+       }
+    })
+        
+    if(name){
+        videogamesList.length?
+        res.status(200).json(videogamesList):
+        res.status(404).send('Video Games Not Found')
+
+    }
+})
+
 //POST /videogames
 router.post('/videogames', async (req, res) => {
     const {name, description, release, rating, platforms, image, genres, createdInDb } = req.body;
@@ -177,29 +211,6 @@ router.post('/videogames', async (req, res) => {
 
 });
 
-// GET /videogames/{id}
-// router.get('/videogames/:id', async (req, res) => {
-//     const id = req.params.id;                                // es lo mismo que const {id} = req.params
-//     const videogamesTotal = await getAllVideogames();
-//     const detailsData = await axios.get(`https://api.rawg.io/api/games/${id}?key=${API_KEY}`);
-//     const videogameData = detailsData.data;
-//     const videogameDetail = {
-        
-//             developers: videogameData.developers.map(d => d.name),
-//             publishers: videogameData.publishers.map(p => p.name),
-//             website: videogameData.website,   
-//             description: videogameData.description_raw,
-//         }
-
-    
-
-//     if(id){
-//         let videogamesId = await videogamesTotal.filter( el => el.id == id)
-//         videogamesId.length?
-//         res.status(200).json(videogamesId.concat(videogameDetail)):
-//         res.status(404).send('Video Game Not Found')
-//     }
-// })
 
 router.get('/videogames/:id', async (req, res) => {
     const id = req.params.id;
