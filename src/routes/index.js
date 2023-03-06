@@ -214,13 +214,14 @@ router.post('/videogames', async (req, res) => {
 //POST /User
 
 router.post('/user', async (req, res) => {
-    const {id, name, email, img, createdInDb } = req.body;
+    const {id, name, email, password, img, createdInDb } = req.body;
 try {
     
     let userCreated = await User.create({
         id,
         name,
         email,
+        password,
         img,
         createdInDb
     })
