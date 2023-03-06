@@ -2,7 +2,7 @@ const { Router } = require('express');
 // Importar todos los routers;
 // Ejemplo: const authRouter = require('./auth.js');
 const axios = require('axios');
-const {Videogame, Genres} = require('../db');
+const {Videogame, Genres, User} = require('../db');
 const {op} = require('sequelize');
 const {API_KEY} = process.env;
 
@@ -211,7 +211,31 @@ router.post('/videogames', async (req, res) => {
 
 });
 
+//POST /User
 
+router.post('/user', async (req, res) => {
+    const {id, name, email, img, createdInDb } = req.body;
+try {
+    
+    let userCreated = await User.create({
+        id,
+        name,
+        email,
+        img,
+        createdInDb
+    })
+
+    res.status(200).send(`User ${name} Created`)
+
+} catch (error) {
+    
+    res.status(400).send('Error Creating User')
+    
+}
+
+})
+
+//GET /videogames by id
 router.get('/videogames/:id', async (req, res) => {
     const id = req.params.id;
     const details = await axios.get(`https://api.rawg.io/api/games/${id}?key=${API_KEY}`);
